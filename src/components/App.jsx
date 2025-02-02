@@ -5,6 +5,11 @@ import { fetchImages } from '../api.js';
 import SearchBar from './SearchBar/SearchBar.jsx';
 import ImageGallery from './ImageGallery/ImageGallery.jsx';
 import Loader from './Loader/Loader.jsx';
+import LoadMoreBtn from './LoadMoreBtn/LoadMoreBtn.jsx';
+import ErrorMessage from './Error/ErrorMessage.jsx';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root');
 
 function App() {
   const [images, setImages] = useState([]);
@@ -12,8 +17,27 @@ function App() {
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // ✅ Track total pages from API
-  const perPage = 10; // ✅ Define perPage
+  const [totalPages, setTotalPages] = useState(1);
+  const perPage = 10;
+
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
+  //const [modalIsOpen, setIsOpen] = React.useState(false);
+  //let subtitle;
+
+  function openModal(image) {
+    setIsOpen(true);
+    setModalImage(image);
+  }
+
+  // function afterOpenModal() {
+  //   subtitle.style.color = '#f00';
+  // }
+
+  function closeModal() {
+    setIsOpen(false);
+    setModalImage(null);
+  }
 
   useEffect(() => {
     if (!query) return;
@@ -68,15 +92,11 @@ function App() {
           <Loader />
         </div>
       )}
-      {error && (
-        <p>Whoops, something went wrong! Please try reloading this page!</p>
-      )}
+      {error && <ErrorMessage />}
       {images.length > 0 && (
         <div>
-          <ImageGallery images={images} />
-          {page < totalPages && (
-            <button onClick={() => setPage(prev => prev + 1)}>Load more</button>
-          )}
+          <ImageGallery images={images} openModal={openModal} />
+          {page < totalPages && <LoadMoreBtn setPage={setPage} />}
           {page >= totalPages && (
             <p className={s.read_the_docs}>
               You have reached the end of the photo collection.
@@ -84,6 +104,35 @@ function App() {
           )}
         </div>
       )}
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        contentLabel="Image Preview"
+        style={{
+          overlay: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+          content: {
+            width: '60%',
+            margin: 'auto',
+            padding: '20px',
+            borderRadius: '10px',
+            textAlign: 'center',
+          },
+        }}
+      >
+        {modalImage && (
+          <>
+            <h2>Photo Preview</h2>
+            <img
+              src={modalImage}
+              alt="Modal Content"
+              style={{ width: '100%' }}
+            />
+            <button onClick={closeModal} className={s.close_button}>
+              Close
+            </button>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
