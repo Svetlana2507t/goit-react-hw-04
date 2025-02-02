@@ -91,17 +91,17 @@ function App() {
     <div className={s.card}>
       <h1>Welcome to the photo gallery!</h1>
       <SearchBar onSubmit={handleSetQuery} />
-      {loading && (
-        <div className={s.loading_container}>
-          <p className={s.read_the_docs}>Loading images, please wait...</p>
-          <Loader />
-        </div>
-      )}
 
       {error && <ErrorMessage error={error} />}
       {images.length > 0 && (
         <div>
           <ImageGallery images={images} openModal={openModal} />
+          {loading && (
+            <div className={s.loading_container}>
+              <p className={s.read_the_docs}>Loading images, please wait...</p>
+              <Loader />
+            </div>
+          )}
           {page < totalPages && <LoadMoreBtn setPage={setPage} />}
           {page >= totalPages && (
             <p className={s.read_the_docs}>
