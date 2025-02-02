@@ -10,7 +10,7 @@ const ModalComponent = () => {
 
       <Modal
         isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)} // ✅ Closes on overlay click / ESC key
+        onRequestClose={() => setModalIsOpen(false)}
         contentLabel="Example Modal"
         style={{
           overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
@@ -24,7 +24,7 @@ const ModalComponent = () => {
       >
         <h2>Modal Title</h2>
         <p>This is a modal window.</p>
-        <button onClick={() => setModalIsOpen(false)}>Close</button>
+        {/* <button onClick={() => setModalIsOpen(false)}>Close</button> */}
       </Modal>
     </div>
   );

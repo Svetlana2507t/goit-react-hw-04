@@ -7,6 +7,8 @@ import ImageGallery from './ImageGallery/ImageGallery.jsx';
 import Loader from './Loader/Loader.jsx';
 import LoadMoreBtn from './LoadMoreBtn/LoadMoreBtn.jsx';
 import ErrorMessage from './Error/ErrorMessage.jsx';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
 import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
@@ -22,17 +24,13 @@ function App() {
 
   const [modalIsOpen, setIsOpen] = useState(false);
   const [modalImage, setModalImage] = useState(null);
-  //const [modalIsOpen, setIsOpen] = React.useState(false);
+
   //let subtitle;
 
   function openModal(image) {
     setIsOpen(true);
     setModalImage(image);
   }
-
-  // function afterOpenModal() {
-  //   subtitle.style.color = '#f00';
-  // }
 
   function closeModal() {
     setIsOpen(false);
@@ -42,22 +40,22 @@ function App() {
   useEffect(() => {
     if (!query) return;
 
-    console.log('useEffect triggered with:', { query, page });
+    //console.log('useEffect triggered with:', { query, page });
 
     const getData = async () => {
       try {
         setLoading(true);
         setError(false);
-        console.log('Fetching images for:', query, 'Page:', page);
+        // console.log('Fetching images for:', query, 'Page:', page);
 
         const { results, totalPages } = await fetchImages(query, page, perPage);
 
         if (!Array.isArray(results)) {
-          console.error('Error: results is not an array', results);
+          //console.error('Error: results is not an array', results);
           return;
         }
 
-        console.log('API Response Data:', results);
+        //console.log('API Response Data:', results);
         setImages(prevImages =>
           page === 1 ? results : [...prevImages, ...results]
         );
@@ -74,7 +72,16 @@ function App() {
   }, [query, page]);
 
   const handleSetQuery = newQuery => {
-    console.log(newQuery);
+    if (!newQuery.trim()) {
+      iziToast.warning({
+        title: 'Caution',
+        message: 'Please enter a search term!',
+        position: 'topRight',
+        timeout: 5000,
+      });
+      return;
+    }
+    // console.log(newQuery);
     setQuery(newQuery);
     setImages([]);
     setPage(1);
@@ -83,16 +90,15 @@ function App() {
   return (
     <div className={s.card}>
       <h1>Welcome to the photo gallery!</h1>
-
       <SearchBar onSubmit={handleSetQuery} />
-
       {loading && (
         <div className={s.loading_container}>
           <p className={s.read_the_docs}>Loading images, please wait...</p>
           <Loader />
         </div>
       )}
-      {error && <ErrorMessage />}
+
+      {error && <ErrorMessage error={error} />}
       {images.length > 0 && (
         <div>
           <ImageGallery images={images} openModal={openModal} />
@@ -108,28 +114,22 @@ function App() {
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
         contentLabel="Image Preview"
-        style={{
-          overlay: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-          content: {
-            width: '60%',
-            margin: 'auto',
-            padding: '20px',
-            borderRadius: '10px',
-            textAlign: 'center',
-          },
-        }}
+        className={s.modal_content}
+        overlayClassName={s.modal_overlay}
       >
         {modalImage && (
           <>
-            <h2>Photo Preview</h2>
+            <h2 className={s.modal_header}>Photo Preview</h2>
             <img
-              src={modalImage}
-              alt="Modal Content"
+              src={modalImage.urls.regular}
+              alt={modalImage.alt_description || 'Photo'}
               style={{ width: '100%' }}
             />
-            <button onClick={closeModal} className={s.close_button}>
+            <p>{`User: ${modalImage.user?.username || 'Unknown'}, 
+            likes: ${modalImage.likes || 0}`}</p>
+            {/* <button onClick={closeModal} className={s.close_button}>
               Close
-            </button>
+            </button> */}
           </>
         )}
       </Modal>
