@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
-import './App.css';
-//import axios from 'axios';
-import Articles from './Articles/Articles.jsx';
-import { fetchArticles } from '../articles-api.js';
-import { SearchForm } from './SearchForm/SearchForm.jsx';
+import s from './App.module.css';
+import { fetchImages } from '../api.js';
+import SearchBar from './SearchBar/SearchBar.jsx';
+import ImageGallery from './ImageGallery/ImageGallery.jsx';
+import Loader from './Loader/Loader.jsx';
 
 function App() {
-  const [articles, setArticles] = useState([]);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // ✅ Track total pages from API
+  const perPage = 10; // ✅ Define perPage
 
   useEffect(() => {
     if (!query) return;
@@ -22,13 +24,20 @@ function App() {
       try {
         setLoading(true);
         setError(false);
-        console.log('Fetching articles for:', query, 'Page:', page);
-        const { hits } = await fetchArticles(query, page);
-        //setArticles(hits, page, hitsPerPage);
-        console.log('API Response Hits:', hits);
-        setArticles(prevArticles =>
-          page === 0 ? hits : [...prevArticles, ...hits]
+        console.log('Fetching images for:', query, 'Page:', page);
+
+        const { results, totalPages } = await fetchImages(query, page, perPage);
+
+        if (!Array.isArray(results)) {
+          console.error('Error: results is not an array', results);
+          return;
+        }
+
+        console.log('API Response Data:', results);
+        setImages(prevImages =>
+          page === 1 ? results : [...prevImages, ...results]
         );
+        setTotalPages(totalPages);
       } catch (err) {
         console.error('Fetching Error:', err);
         setError(true);
@@ -43,37 +52,39 @@ function App() {
   const handleSetQuery = newQuery => {
     console.log(newQuery);
     setQuery(newQuery);
-
-    // try {
-    //   setArticles([]);
-    //   setError(false);
-    //   setLoading(true);
-    //   const data = await fetchArticles(topic);
-    //   setArticles(data);
-    // } catch {
-    //   setError(true);
-    // } finally {
-    //   setLoading(false);
-    // }
+    setImages([]);
+    setPage(1);
   };
 
   return (
-    <>
-      <h1>HTTP requests</h1>
+    <div className={s.card}>
+      <h1>Welcome to the photo gallery!</h1>
 
-      <SearchForm onSubmit={handleSetQuery} />
+      <SearchBar onSubmit={handleSetQuery} />
 
-      {loading && <p>Loading data, please wait...</p>}
+      {loading && (
+        <div className={s.loading_container}>
+          <p className={s.read_the_docs}>Loading images, please wait...</p>
+          <Loader />
+        </div>
+      )}
       {error && (
         <p>Whoops, something went wrong! Please try reloading this page!</p>
       )}
-      {/* {articles.length > 0 && (markup)} */}
-      <div>
-        <p className="card">Latest articles</p>
-        <Articles items={articles} />
-        <button onClick={() => setPage(prev => prev + 1)}>Load more</button>
-      </div>
-    </>
+      {images.length > 0 && (
+        <div>
+          <ImageGallery images={images} />
+          {page < totalPages && (
+            <button onClick={() => setPage(prev => prev + 1)}>Load more</button>
+          )}
+          {page >= totalPages && (
+            <p className={s.read_the_docs}>
+              You have reached the end of the photo collection.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import ArticleItem from '../ArticleItem/ArticleItem';
+import ArticleItem from '../ImageCard/ArticleItem';
 
 const ArticleList = ({ items }) => {
   console.log('Articles component received items:', items);
